@@ -6,6 +6,7 @@ import { dirname } from 'path';
 import { listSources } from './sourcesService.js';
 import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
+import { sendUsageData } from './usageService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -182,6 +183,16 @@ export const executeScript = async (scriptName, ws, config = {}) => {
       if (ws.readyState === 1) { // WebSocket.OPEN
         ws.send(JSON.stringify({ type: 'exit', data: `Process exited with code ${code}` }));
       }
+
+      // Send anonymous usage data
+      try {
+        sendUsageData({
+          exit_code: code,
+          error: code !== 0
+        });
+      } catch (error) {
+        // Silently ignore errors in usage data collection
+      }
     });
 
     return childProcess;
@@ -193,6 +204,17 @@ export const executeScript = async (scriptName, ws, config = {}) => {
     } else {
       console.error(`[executeScript] WebSocket not open, could not send error: ${error.message}`);
     }
+
+    // Send anonymous usage data for script setup errors
+    try {
+      sendUsageData({
+        exit_code: 1,
+        error: true
+      });
+    } catch (usageError) {
+      // Silently ignore errors in usage data collection
+    }
+
     return childProcess; // Return null if process wasn't created
   }
 };

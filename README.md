@@ -12,6 +12,7 @@ A web-based interface for managing and executing scripts across multiple program
 - 📡 Real-time script output via WebSocket
 - 📤 Drag-and-drop file upload
 - 💾 Persistent configuration with file system or MongoDB
+- 📊 Optional anonymous usage collection
 - 🎨 Modern UI with Tailwind CSS and DaisyUI
 
 ## Prerequisites
@@ -48,6 +49,10 @@ SCRIPTS_DIR=/path/to/scripts # Custom scripts directory (optional)
 # MongoDB configuration (optional)
 USE_MONGODB=false            # Set to 'true' to enable MongoDB persistence
 MONGODB_URI=mongodb://username:password@hostname:port/scriptsui?authSource=admin
+
+# Usage collection (optional)
+# This is configured via CLI prompt on first run
+# Settings are stored in ~/.scriptsui/state.json
 ```
 
 ### MongoDB Configuration
@@ -202,6 +207,16 @@ scripts-ui serve
 # Start with a custom environment file
 scripts-ui serve --dotenv .env.production
 ```
+
+### Usage Collection
+
+On first run, the CLI will ask for consent to collect anonymous usage data. This includes only:
+- Script execution exit codes
+- Error flags (true/false)
+
+No personal data or script content is collected. This helps improve the application by understanding common issues.
+
+You can change this setting later by editing `~/.scriptsui/state.json`.
 
 ## Docker Deployment
 

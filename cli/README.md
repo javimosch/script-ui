@@ -44,6 +44,26 @@ Start the server with a custom environment file:
 scripts-ui serve --dotenv .env.production
 ```
 
+## Usage Collection
+
+On first run, the CLI will ask for consent to collect anonymous usage data:
+
+```
+🔍 Usage Collection Consent
+---------------------------
+Scripts UI would like to collect anonymous usage data to improve the application.
+This includes only script execution exit codes and error flags - no personal data or script content.
+Would you like to enable anonymous usage collection? (y/n):
+```
+
+This data helps improve the application by understanding common issues. The collected data includes only:
+- Script execution exit codes
+- Error flags (true/false)
+
+No personal data or script content is collected.
+
+Your preference is stored in `~/.scriptsui/state.json` and can be changed by editing this file.
+
 ## Development
 
 To run the CLI during development:
