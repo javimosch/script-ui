@@ -16,7 +16,7 @@ const app = createApp({
     Config
   },
   template: `
-    <div class="container mx-auto p-4 pb-6 flex flex-col h-[100vh]">
+    <div class="w-full p-4 pb-6 flex flex-col h-[100vh]">
       <h1 class="text-3xl font-bold mb-2">Script Manager</h1>
 
       <!-- Navigation -->
@@ -44,7 +44,7 @@ const app = createApp({
       </div>
 
       <!-- Main Content -->
-      <div v-if="currentView === 'scripts'" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow overflow-hidden h-full">
+      <div v-if="currentView === 'scripts'" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow overflow-hidden h-full w-full">
         <div class="flex flex-col h-full overflow-auto">
           <div class="flex-shrink-0">
             <ScriptList @script-selected="selectScript" />
@@ -57,7 +57,7 @@ const app = createApp({
             />
           </div>
         </div>
-        <div class="h-full overflow-hidden">
+        <div class="h-full overflow-hidden w-full">
           <ScriptOutput :output="output" @clear="clearOutput" />
         </div>
       </div>
