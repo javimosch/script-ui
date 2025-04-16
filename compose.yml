@@ -9,8 +9,6 @@ services:
     volumes:
       - scripts_data:/scripts
       - config_data:/app/data
-      - /home/w1/scripts-ui/scripts:/home/w1/scripts-ui/scripts
-      - /home/jarancibia/Documents/scripts-to-backup:/home/jarancibia/Documents/scripts-to-backup
     environment:
       - PORT=3000
       - SCRIPTS_DIR=/scripts

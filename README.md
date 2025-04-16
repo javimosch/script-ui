@@ -64,12 +64,29 @@ Existing data from `data/sources.json` and `data/config.json` will be automatica
 
 ## Usage
 
-1. Start the server:
+### Using the CLI
+
+Script UI includes a command-line interface for easier server management:
+
+```bash
+# Start the server with default environment
+npm run cli serve
+
+# Start the server with a custom environment file
+npm run cli serve --dotenv .env.production
+```
+
+For more information about the CLI, see [CLI Documentation](./cli/README.md).
+
+### Using npm scripts
+
+Alternatively, you can start the server using npm:
+
 ```bash
 npm start
 ```
 
-2. Open your browser and navigate to `http://localhost:3000`
+After starting the server, open your browser and navigate to `http://localhost:3000`
 
 ### Managing Scripts
 
@@ -135,6 +152,9 @@ Scripts can be executed with:
   /routes        # API endpoints
   /services      # Business logic
   server.js      # Express server setup
+/cli             # Command-line interface
+  index.js       # CLI entry point
+  README.md      # CLI documentation
 /frontend
   /js
     /components  # Vue components
