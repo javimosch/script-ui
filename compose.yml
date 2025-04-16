@@ -1,0 +1,27 @@
+services:
+  scriptsui:
+    image: javimosch/scriptsui
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - scripts_data:/scripts
+      - config_data:/app/data
+      - /home/w1/scripts-ui/scripts:/home/w1/scripts-ui/scripts
+      - /home/jarancibia/Documents/scripts-to-backup:/home/jarancibia/Documents/scripts-to-backup
+    environment:
+      - PORT=3000
+      - SCRIPTS_DIR=/scripts
+      # Uncomment to enable MongoDB persistence
+      # - USE_MONGODB=true
+      # - MONGODB_URI=mongodb://username:password@mongodb:27017/scriptsui?authSource=admin
+    restart: unless-stopped
+    env_file:
+      - .env
+volumes:
+  scripts_data:
+    name: scriptsui_scripts
+  config_data:
+    name: scriptsui_config
