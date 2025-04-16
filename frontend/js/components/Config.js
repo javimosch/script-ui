@@ -145,46 +145,62 @@ export default {
       }
     };
 
-    const loadGlobalEnv = () => {
-      const env = configService.getGlobalEnv();
-      globalEnv.value = Object.entries(env).reduce((acc, [key, value], index) => {
-        acc[index] = { key, value };
-        return acc;
-      }, {});
+    const loadGlobalEnv = async () => {
+      try {
+        const env = await configService.getGlobalEnv();
+        globalEnv.value = Object.entries(env).reduce((acc, [key, value], index) => {
+          acc[index] = { key, value };
+          return acc;
+        }, {});
+      } catch (error) {
+        console.error('Failed to load global environment variables:', error);
+      }
     };
 
-    const loadScriptConfig = () => {
+    const loadScriptConfig = async () => {
       if (!selectedScript.value) return;
 
-      const config = configService.getScriptConfig(selectedScript.value);
-      scriptConfig.value = config;
+      try {
+        const config = await configService.getScriptConfig(selectedScript.value);
+        scriptConfig.value = config;
 
-      scriptEnv.value = Object.entries(config.env || {}).reduce((acc, [key, value], index) => {
-        acc[index] = { key, value };
-        return acc;
-      }, {});
+        scriptEnv.value = Object.entries(config.env || {}).reduce((acc, [key, value], index) => {
+          acc[index] = { key, value };
+          return acc;
+        }, {});
+      } catch (error) {
+        console.error(`Failed to load config for script ${selectedScript.value}:`, error);
+      }
     };
 
-    const saveScriptConfig = () => {
-      const envObj = Object.values(scriptEnv.value).reduce((acc, { key, value }) => {
-        if (key) acc[key] = value;
-        return acc;
-      }, {});
+    const saveScriptConfig = async () => {
+      try {
+        const envObj = Object.values(scriptEnv.value).reduce((acc, { key, value }) => {
+          if (key) acc[key] = value;
+          return acc;
+        }, {});
 
-      configService.updateScriptConfig(selectedScript.value, {
-        permissions: scriptConfig.value.permissions,
-        env: envObj,
-        args: scriptConfig.value.args || ''
-      });
+        await configService.updateScriptConfig(selectedScript.value, {
+          permissions: scriptConfig.value.permissions,
+          env: envObj,
+          args: scriptConfig.value.args || ''
+        });
+      } catch (error) {
+        console.error(`Failed to save config for script ${selectedScript.value}:`, error);
+      }
     };
 
-    const saveGlobalEnv = () => {
-      const envObj = Object.values(globalEnv.value).reduce((acc, { key, value }) => {
-        if (key) acc[key] = value;
-        return acc;
-      }, {});
+    const saveGlobalEnv = async () => {
+      try {
+        const envObj = Object.values(globalEnv.value).reduce((acc, { key, value }) => {
+          if (key) acc[key] = value;
+          return acc;
+        }, {});
 
-      configService.updateGlobalEnv(envObj);
+        await configService.updateGlobalEnv(envObj);
+      } catch (error) {
+        console.error('Failed to save global environment variables:', error);
+      }
     };
 
     const addGlobalEnv = () => {
@@ -192,14 +208,14 @@ export default {
       globalEnv.value[newIndex] = { key: '', value: '' };
     };
 
-    const removeGlobalEnv = (index) => {
+    const removeGlobalEnv = async (index) => {
       delete globalEnv.value[index];
-      saveGlobalEnv();
+      await saveGlobalEnv();
     };
 
-    const updateGlobalEnvKey = (index, newKey) => {
+    const updateGlobalEnvKey = async (index, newKey) => {
       globalEnv.value[index].key = newKey;
-      saveGlobalEnv();
+      await saveGlobalEnv();
     };
 
     const addScriptEnv = () => {
@@ -207,14 +223,14 @@ export default {
       scriptEnv.value[newIndex] = { key: '', value: '' };
     };
 
-    const removeScriptEnv = (index) => {
+    const removeScriptEnv = async (index) => {
       delete scriptEnv.value[index];
-      saveScriptConfig();
+      await saveScriptConfig();
     };
 
-    const updateScriptEnvKey = (index, newKey) => {
+    const updateScriptEnvKey = async (index, newKey) => {
       scriptEnv.value[index].key = newKey;
-      saveScriptConfig();
+      await saveScriptConfig();
     };
 
     const formatPermission = (perm) => {
@@ -223,21 +239,40 @@ export default {
         .replace('allow', 'Allow');
     };
 
-    onMounted(() => {
-      fetchScripts();
-      loadGlobalEnv();
+    onMounted(async () => {
+      await fetchScripts();
+      await loadGlobalEnv();
     });
 
-    watch(selectedScript, () => {
-      loadScriptConfig();
+    watch(selectedScript, async () => {
+      await loadScriptConfig();
     });
 
+    // Use debounced watchers to avoid too many API calls
+    let globalEnvTimeout = null;
     watch(globalEnv, () => {
-      saveGlobalEnv();
+      clearTimeout(globalEnvTimeout);
+      globalEnvTimeout = setTimeout(() => {
+        saveGlobalEnv();
+      }, 500); // 500ms debounce
     }, { deep: true });
 
+    let scriptEnvTimeout = null;
     watch(scriptEnv, () => {
-      saveScriptConfig();
+      clearTimeout(scriptEnvTimeout);
+      scriptEnvTimeout = setTimeout(() => {
+        saveScriptConfig();
+      }, 500); // 500ms debounce
+    }, { deep: true });
+
+    // Also watch scriptConfig for changes to permissions and args
+    let scriptConfigTimeout = null;
+    watch(scriptConfig, () => {
+      if (!selectedScript.value) return;
+      clearTimeout(scriptConfigTimeout);
+      scriptConfigTimeout = setTimeout(() => {
+        saveScriptConfig();
+      }, 500); // 500ms debounce
     }, { deep: true });
 
     return {
