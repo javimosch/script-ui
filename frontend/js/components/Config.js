@@ -41,17 +41,34 @@ export default {
       <div class="bg-white p-4 rounded-lg shadow">
         <h2 class="text-xl font-semibold mb-4">Script Configurations</h2>
 
-        <!-- Script Selection -->
-        <div class="mb-4">
-          <select
-            v-model="selectedScript"
-            class="w-full rounded border-gray-300"
-          >
-            <option value="">Select a script...</option>
-            <option v-for="script in scripts" :key="script" :value="script">
-              {{ script }}
-            </option>
-          </select>
+        <!-- Source and Script Selection -->
+        <div class="mb-4 space-y-2">
+          <!-- Source Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Source</label>
+            <select
+              v-model="selectedSource"
+              class="w-full rounded border-gray-300"
+            >
+              <option v-for="source in sources" :key="source.id" :value="source.id">
+                {{ source.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Script Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Script</label>
+            <select
+              v-model="selectedScript"
+              class="w-full rounded border-gray-300"
+            >
+              <option value="">Select a script...</option>
+              <option v-for="script in scripts" :key="script" :value="script">
+                {{ script }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <!-- Script Config -->
@@ -131,8 +148,15 @@ export default {
   `,
   setup() {
     const scripts = ref([]);
+    const sources = ref([]);
     const selectedScript = ref('');
-    const scriptConfig = ref({ permissions: {}, env: {} });
+    const selectedSource = ref('default');
+    const scriptConfig = ref({
+      scriptName: '',
+      sourceId: 'default',
+      permissions: {},
+      env: {}
+    });
     const globalEnv = ref({});
     const scriptEnv = ref({});
 
@@ -142,6 +166,20 @@ export default {
         scripts.value = await response.json();
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
+      }
+    };
+
+    const fetchSources = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/sources');
+        sources.value = await response.json();
+        // Set default source if available
+        const defaultSource = sources.value.find(s => s.isDefault);
+        if (defaultSource) {
+          selectedSource.value = defaultSource.id;
+        }
+      } catch (error) {
+        console.error('Failed to fetch sources:', error);
       }
     };
 
@@ -161,7 +199,7 @@ export default {
       if (!selectedScript.value) return;
 
       try {
-        const config = await configService.getScriptConfig(selectedScript.value);
+        const config = await configService.getScriptConfig(selectedScript.value, selectedSource.value);
         scriptConfig.value = config;
 
         scriptEnv.value = Object.entries(config.env || {}).reduce((acc, [key, value], index) => {
@@ -184,7 +222,7 @@ export default {
           permissions: scriptConfig.value.permissions,
           env: envObj,
           args: scriptConfig.value.args || ''
-        });
+        }, selectedSource.value);
       } catch (error) {
         console.error(`Failed to save config for script ${selectedScript.value}:`, error);
       }
@@ -240,12 +278,17 @@ export default {
     };
 
     onMounted(async () => {
-      await fetchScripts();
-      await loadGlobalEnv();
+      await Promise.all([
+        fetchScripts(),
+        fetchSources(),
+        loadGlobalEnv()
+      ]);
     });
 
-    watch(selectedScript, async () => {
-      await loadScriptConfig();
+    watch([selectedScript, selectedSource], async () => {
+      if (selectedScript.value) {
+        await loadScriptConfig();
+      }
     });
 
     // Use debounced watchers to avoid too many API calls
@@ -277,7 +320,9 @@ export default {
 
     return {
       scripts,
+      sources,
       selectedScript,
+      selectedSource,
       scriptConfig,
       globalEnv,
       scriptEnv,

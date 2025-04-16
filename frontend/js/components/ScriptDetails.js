@@ -94,6 +94,7 @@ export default {
     const showEnvVars = ref(false);
     const showPermissions = ref(false);
     const mergedEnvData = ref({});
+    const sourceId = ref('default'); // Default source ID
 
     const scriptType = computed(() => {
       return configService.getScriptType(props.script);
@@ -113,14 +114,20 @@ export default {
         .replace('allow', 'Allow');
     };
 
+    // Get the current source ID from the configService
+    const getCurrentSourceId = async () => {
+      sourceId.value = configService.getCurrentSourceId();
+    };
+
     const loadScriptConfig = async () => {
       try {
-        const config = await configService.getScriptConfig(props.script);
+        await getCurrentSourceId();
+        const config = await configService.getScriptConfig(props.script, sourceId.value);
         scriptConfig.value = config;
         args.value = config.args || '';
 
         // Load merged environment variables
-        mergedEnvData.value = await configService.getMergedEnv(props.script);
+        mergedEnvData.value = await configService.getMergedEnv(props.script, sourceId.value);
       } catch (error) {
         console.error(`Failed to load script config for ${props.script}:`, error);
       }
@@ -128,15 +135,17 @@ export default {
 
     const executeScript = async () => {
       try {
-        const denoFlags = await configService.getDenoFlags(props.script);
-        const env = await configService.getMergedEnv(props.script);
+        await getCurrentSourceId();
+        const denoFlags = await configService.getDenoFlags(props.script, sourceId.value);
+        const env = await configService.getMergedEnv(props.script, sourceId.value);
 
         emit('execute', {
           script: props.script,
           args: args.value,
           config: {
             denoFlags,
-            env
+            env,
+            sourceId: sourceId.value
           }
         });
       } catch (error) {

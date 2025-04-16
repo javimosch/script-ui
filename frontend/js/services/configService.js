@@ -1,6 +1,8 @@
 const API_URL = 'http://localhost:3000/api';
 
 const defaultScriptConfig = {
+  scriptName: '', // Script filename
+  sourceId: '', // Source ID where the script is located
   permissions: {
     allowRead: false,
     allowWrite: false,
@@ -39,7 +41,7 @@ async function fetchConfig() {
   } catch (error) {
     console.error('Error fetching config:', error);
     // Return empty config if API fails
-    return { globalEnv: {}, scriptConfigs: {} };
+    return { globalEnv: {}, scriptConfigs: [] };
   }
 }
 
@@ -67,28 +69,106 @@ async function updateConfig(config) {
   }
 }
 
-export const getScriptConfig = async (scriptName) => {
+// Get the current source ID from the UI or use default
+export const getCurrentSourceId = () => {
+  // This could be enhanced to get the currently selected source from the UI
+  return 'default';
+};
+
+export const getScriptConfig = async (scriptName, sourceId) => {
   try {
-    const config = await fetchConfig();
-    return config.scriptConfigs[scriptName] || { ...defaultScriptConfig };
+    // If sourceId is not provided, use the current source
+    if (!sourceId) {
+      sourceId = getCurrentSourceId();
+    }
+
+    const response = await fetch(`${API_URL}/config/script/${encodeURIComponent(scriptName)}?sourceId=${encodeURIComponent(sourceId)}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch script config: ${response.statusText}`);
+    }
+
+    const config = await response.json();
+    return config || {
+      ...defaultScriptConfig,
+      scriptName,
+      sourceId
+    };
   } catch (error) {
     console.error(`Error getting script config for ${scriptName}:`, error);
-    return { ...defaultScriptConfig };
+    return {
+      ...defaultScriptConfig,
+      scriptName,
+      sourceId: sourceId || getCurrentSourceId()
+    };
   }
 };
 
-export const updateScriptConfig = async (scriptName, newConfig) => {
+export const updateScriptConfig = async (scriptName, newConfig, sourceId) => {
   try {
-    const config = await fetchConfig();
-    config.scriptConfigs[scriptName] = {
-      ...defaultScriptConfig,
-      ...newConfig
+    // If sourceId is not provided, use the current source
+    if (!sourceId) {
+      sourceId = getCurrentSourceId();
+    }
+
+    // Make sure scriptName and sourceId are included in the config
+    const configToUpdate = {
+      ...newConfig,
+      scriptName,
+      sourceId
     };
-    await updateConfig(config);
-    return config.scriptConfigs[scriptName];
+
+    const response = await fetch(`${API_URL}/config/script/${encodeURIComponent(scriptName)}?sourceId=${encodeURIComponent(sourceId)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(configToUpdate)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update script config: ${response.statusText}`);
+    }
+
+    const updatedConfig = await response.json();
+    // Invalidate cache
+    configCache = null;
+    return updatedConfig;
   } catch (error) {
     console.error(`Error updating script config for ${scriptName}:`, error);
     throw error;
+  }
+};
+
+// Get all script configs for a specific script name across all sources
+export const getAllScriptConfigsForName = async (scriptName) => {
+  try {
+    const response = await fetch(`${API_URL}/config/script/${encodeURIComponent(scriptName)}/all`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch script configs: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting all configs for script ${scriptName}:`, error);
+    return [];
+  }
+};
+
+// Get all script configs for a specific source
+export const getScriptConfigsForSource = async (sourceId) => {
+  try {
+    const response = await fetch(`${API_URL}/config/source/${encodeURIComponent(sourceId)}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch source configs: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting configs for source ${sourceId}:`, error);
+    return [];
   }
 };
 
@@ -114,8 +194,8 @@ export const updateGlobalEnv = async (env) => {
   }
 };
 
-export const getDenoFlags = async (scriptName) => {
-  const config = await getScriptConfig(scriptName);
+export const getDenoFlags = async (scriptName, sourceId) => {
+  const config = await getScriptConfig(scriptName, sourceId);
   const flags = [];
 
   if (config.permissions.allowRead) flags.push('--allow-read');
@@ -129,14 +209,14 @@ export const getDenoFlags = async (scriptName) => {
   return flags.join(' ');
 };
 
-export const getMergedEnv = async (scriptName) => {
+export const getMergedEnv = async (scriptName, sourceId) => {
   const globalEnv = await getGlobalEnv();
-  const scriptConfig = await getScriptConfig(scriptName);
+  const scriptConfig = await getScriptConfig(scriptName, sourceId);
   return { ...globalEnv, ...scriptConfig.env };
 };
 
-export const getScriptArgs = async (scriptName) => {
-  const config = await getScriptConfig(scriptName);
+export const getScriptArgs = async (scriptName, sourceId) => {
+  const config = await getScriptConfig(scriptName, sourceId);
   return config.args || '';
 };
 

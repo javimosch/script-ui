@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getConfig, updateConfig, getScriptConfig, updateScriptConfig, getGlobalEnv, updateGlobalEnv } from '../services/configService.js';
+import { getConfig, updateConfig, getScriptConfig, updateScriptConfig, getGlobalEnv, updateGlobalEnv, getAllScriptConfigsForName, getScriptConfigsForSource } from '../services/configService.js';
 
 const router = Router();
 
@@ -30,7 +30,8 @@ router.put('/', async (req, res) => {
 router.get('/script/:name', async (req, res) => {
   try {
     const scriptName = req.params.name;
-    const config = await getScriptConfig(scriptName);
+    const sourceId = req.query.sourceId || 'default';
+    const config = await getScriptConfig(scriptName, sourceId);
     res.json(config);
   } catch (error) {
     console.error(`Error getting script config for ${req.params.name}:`, error);
@@ -42,12 +43,37 @@ router.get('/script/:name', async (req, res) => {
 router.put('/script/:name', async (req, res) => {
   try {
     const scriptName = req.params.name;
+    const sourceId = req.query.sourceId || 'default';
     const newConfig = req.body;
-    const updatedConfig = await updateScriptConfig(scriptName, newConfig);
+    const updatedConfig = await updateScriptConfig(scriptName, newConfig, sourceId);
     res.json(updatedConfig);
   } catch (error) {
     console.error(`Error updating script config for ${req.params.name}:`, error);
     res.status(500).json({ error: 'Failed to update script config' });
+  }
+});
+
+// Get all script configs for a specific script name across all sources
+router.get('/script/:name/all', async (req, res) => {
+  try {
+    const scriptName = req.params.name;
+    const configs = await getAllScriptConfigsForName(scriptName);
+    res.json(configs);
+  } catch (error) {
+    console.error(`Error getting all configs for script ${req.params.name}:`, error);
+    res.status(500).json({ error: 'Failed to get script configs' });
+  }
+});
+
+// Get all script configs for a specific source
+router.get('/source/:id', async (req, res) => {
+  try {
+    const sourceId = req.params.id;
+    const configs = await getScriptConfigsForSource(sourceId);
+    res.json(configs);
+  } catch (error) {
+    console.error(`Error getting configs for source ${req.params.id}:`, error);
+    res.status(500).json({ error: 'Failed to get source configs' });
   }
 });
 
