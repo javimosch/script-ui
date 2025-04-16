@@ -69,6 +69,9 @@ Existing data from `data/sources.json` and `data/config.json` will be automatica
 Script UI includes a command-line interface for easier server management:
 
 ```bash
+# Quick start with npx (no installation required)
+npx scripts-ui serve
+
 # Start the server with default environment
 npm run cli serve
 
@@ -162,6 +165,94 @@ Scripts can be executed with:
   index.html     # Entry point
 /data            # Configuration storage
 /scripts         # Default scripts location
+```
+
+## CLI
+
+Scripts UI includes a command-line interface (CLI) for easier server management and automation.
+
+### Installation
+
+The CLI is automatically installed when you install the Scripts UI package:
+
+```bash
+npm install -g script-ui
+```
+
+### Commands
+
+#### serve
+
+Start the Scripts UI server.
+
+```bash
+scripts-ui serve [options]
+```
+
+**Options:**
+
+- `--dotenv <path>`: Path to a custom .env file to load environment variables from
+
+**Examples:**
+
+```bash
+# Start with default environment
+scripts-ui serve
+
+# Start with a custom environment file
+scripts-ui serve --dotenv .env.production
+```
+
+## Docker Deployment
+
+Scripts UI can be easily deployed using Docker.
+
+### Using Docker Run
+
+```bash
+docker run -d \
+  --name scriptsui \
+  -p 3000:3000 \
+  -v scripts_data:/scripts \
+  -v config_data:/app/data \
+  -e PORT=3000 \
+  -e SCRIPTS_DIR=/scripts \
+  javimosch/scriptsui
+```
+
+### Using Docker Compose
+
+Create a `docker-compose.yml` file:
+
+```yaml
+services:
+  scriptsui:
+    image: javimosch/scriptsui
+    ports:
+      - "3000:3000"
+    volumes:
+      - scripts_data:/scripts
+      - config_data:/app/data
+    environment:
+      - PORT=3000
+      - SCRIPTS_DIR=/scripts
+      # Uncomment to enable MongoDB persistence
+      # - USE_MONGODB=true
+      # - MONGODB_URI=mongodb://username:password@mongodb:27017/scriptsui?authSource=admin
+    restart: unless-stopped
+    env_file:
+      - .env
+volumes:
+  scripts_data:
+    name: scriptsui_scripts
+  config_data:
+    name: scriptsui_config
+```
+
+Then run:
+
+```bash
+docker-compose up -d
 ```
 
 ## Development

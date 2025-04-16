@@ -6,7 +6,7 @@
     "start": "node backend/server.js",
     "cli": "node cli/index.js"
   },
-  "main":"./cli/index.js",
+  "main": "./cli/index.js",
   "bin": {
     "scripts-ui": "./cli/index.js"
   },
