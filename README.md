@@ -11,6 +11,7 @@ A web-based interface for managing and executing scripts across multiple program
 - 🔒 Deno permission management
 - 📡 Real-time script output via WebSocket
 - 📤 Drag-and-drop file upload
+- 💾 Persistent configuration with file system or MongoDB
 - 🎨 Modern UI with Tailwind CSS and DaisyUI
 
 ## Prerequisites
@@ -18,6 +19,7 @@ A web-based interface for managing and executing scripts across multiple program
 - Node.js (v14 or higher)
 - Deno (for TypeScript script execution)
 - Bash (for shell script execution)
+- MongoDB (optional, for database persistence)
 
 ## Installation
 
@@ -39,9 +41,24 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
+# Server configuration
 PORT=3000                    # Server port (default: 3000)
 SCRIPTS_DIR=/path/to/scripts # Custom scripts directory (optional)
+
+# MongoDB configuration (optional)
+USE_MONGODB=false            # Set to 'true' to enable MongoDB persistence
+MONGODB_URI=mongodb://username:password@hostname:port/scriptsui?authSource=admin
 ```
+
+### MongoDB Configuration
+
+To use MongoDB for configuration persistence:
+
+1. Set `USE_MONGODB=true` in your `.env` file
+2. Provide a valid MongoDB connection URI in `MONGODB_URI`
+3. Restart the server
+
+When MongoDB is enabled, all configuration data (script configs, environment variables, etc.) will be stored in MongoDB instead of the file system. This provides better scalability and allows for deployment across multiple instances.
 
 ## Usage
 
@@ -130,7 +147,7 @@ Scripts can be executed with:
 The project uses:
 - Frontend: Vue 3 (ESM build) + Tailwind CSS + DaisyUI
 - Backend: Express.js + WebSocket
-- Storage: File system + localStorage
+- Storage: File system or MongoDB + localStorage
 
 ## Contributing
 

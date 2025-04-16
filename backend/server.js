@@ -8,6 +8,7 @@ import scriptsRouter from './routes/scripts.js';
 import sourcesRouter from './routes/sources.js';
 import configRouter from './routes/config.js';
 import { executeScript } from './services/scriptService.js';
+import { initMongoDB, isMongoDBEnabled } from './services/mongoService.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -89,11 +90,25 @@ wss.on('connection', (ws, request) => {
   });
 });
 
+// Initialize MongoDB if enabled
+const initializeServices = async () => {
+  // Try to initialize MongoDB
+  const mongoInitialized = await initMongoDB();
+  if (mongoInitialized) {
+    console.log('[Server] MongoDB persistence enabled');
+  } else {
+    console.log('[Server] Using file-based persistence');
+  }
+};
+
 // Start server
-const server = app.listen(port, () => {
+const server = app.listen(port, async () => {
   console.log(`[Server] Server running on port ${port}`);
   console.log(`[Server] Node.js version: ${process.version}`);
   console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Initialize services after server starts
+  await initializeServices();
 });
 
 // Handle WebSocket upgrade

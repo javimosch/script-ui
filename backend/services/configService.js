@@ -1,7 +1,8 @@
-import { readFile, writeFile } from 'fs/promises';
+import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
+import { isMongoDBEnabled, getDB } from './mongoService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -33,6 +34,11 @@ const defaultScriptConfig = {
 // Initialize config file if it doesn't exist
 async function initConfigFile() {
   try {
+    // Create data directory if it doesn't exist
+    if (!existsSync(DATA_DIR)) {
+      await mkdir(DATA_DIR, { recursive: true });
+    }
+
     try {
       await readFile(CONFIG_FILE, 'utf8');
     } catch (error) {
@@ -48,16 +54,71 @@ async function initConfigFile() {
   }
 }
 
+// Get config from MongoDB
+async function getConfigFromMongo() {
+  try {
+    const db = getDB();
+    const configCollection = db.collection('config');
+
+    // Get the config document
+    let config = await configCollection.findOne({ _id: 'config' });
+
+    // If no config exists, create default config
+    if (!config) {
+      config = { ...defaultConfig, _id: 'config' };
+      await configCollection.insertOne(config);
+    }
+
+    return config;
+  } catch (error) {
+    console.error('[MongoDB] Error getting config:', error);
+    throw error;
+  }
+}
+
+// Update config in MongoDB
+async function updateConfigInMongo(newConfig) {
+  try {
+    const db = getDB();
+    const configCollection = db.collection('config');
+
+    // Ensure _id is set
+    const configToUpdate = { ...newConfig, _id: 'config' };
+
+    // Update the config document
+    await configCollection.replaceOne(
+      { _id: 'config' },
+      configToUpdate,
+      { upsert: true }
+    );
+
+    return configToUpdate;
+  } catch (error) {
+    console.error('[MongoDB] Error updating config:', error);
+    throw error;
+  }
+}
+
 export const getConfig = async () => {
-  await initConfigFile();
-  const config = JSON.parse(await readFile(CONFIG_FILE, 'utf8'));
-  return config;
+  // Use MongoDB if enabled, otherwise use file system
+  if (isMongoDBEnabled()) {
+    return await getConfigFromMongo();
+  } else {
+    await initConfigFile();
+    const config = JSON.parse(await readFile(CONFIG_FILE, 'utf8'));
+    return config;
+  }
 };
 
 export const updateConfig = async (newConfig) => {
-  await initConfigFile();
-  await writeFile(CONFIG_FILE, JSON.stringify(newConfig), 'utf8');
-  return newConfig;
+  // Use MongoDB if enabled, otherwise use file system
+  if (isMongoDBEnabled()) {
+    return await updateConfigInMongo(newConfig);
+  } else {
+    await initConfigFile();
+    await writeFile(CONFIG_FILE, JSON.stringify(newConfig), 'utf8');
+    return newConfig;
+  }
 };
 
 // Helper function to migrate from old object format to new array format
