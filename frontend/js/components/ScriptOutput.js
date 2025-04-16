@@ -10,7 +10,7 @@ export default {
   },
   emits: ['clear'],
   template: `
-    <div class="bg-white p-4 rounded-lg shadow">
+    <div class="bg-white p-4 rounded-lg shadow h-full flex flex-col overflow-hidden">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">Output</h2>
         <button
@@ -22,7 +22,7 @@ export default {
           Clear
         </button>
       </div>
-      <div ref="outputContainer" class="bg-gray-900 text-white p-4 rounded font-mono h-96 overflow-auto whitespace-pre-wrap leading-relaxed text-sm">
+      <div ref="outputContainer" class="bg-gray-900 text-white p-4 rounded font-mono flex-grow overflow-y-auto whitespace-pre-wrap leading-relaxed text-sm h-[calc(100%-3rem)]">
         <div
           v-for="(line, index) in output"
           :key="index"

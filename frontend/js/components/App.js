@@ -16,11 +16,11 @@ const app = createApp({
     Config
   },
   template: `
-    <div class="container mx-auto p-4">
-      <h1 class="text-3xl font-bold mb-4">Script Manager</h1>
+    <div class="container mx-auto p-4 pb-6 flex flex-col h-[100vh]">
+      <h1 class="text-3xl font-bold mb-2">Script Manager</h1>
 
       <!-- Navigation -->
-      <div class="mb-4">
+      <div class="mb-2">
         <nav class="flex gap-4">
           <button
             @click="currentView = 'scripts'"
@@ -44,23 +44,27 @@ const app = createApp({
       </div>
 
       <!-- Main Content -->
-      <div v-if="currentView === 'scripts'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <ScriptList @script-selected="selectScript" />
-          <ScriptDetails
-            v-if="selectedScript"
-            :script="selectedScript"
-            @execute="executeScript"
-            @close="selectedScript = null"
-            class="mt-4"
-          />
+      <div v-if="currentView === 'scripts'" class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow overflow-hidden h-full">
+        <div class="flex flex-col h-full overflow-auto">
+          <div class="flex-shrink-0">
+            <ScriptList @script-selected="selectScript" />
+            <ScriptDetails
+              v-if="selectedScript"
+              :script="selectedScript"
+              @execute="executeScript"
+              @close="selectedScript = null"
+              class="mt-4"
+            />
+          </div>
         </div>
-        <ScriptOutput :output="output" @clear="clearOutput" />
+        <div class="h-full overflow-hidden">
+          <ScriptOutput :output="output" @clear="clearOutput" />
+        </div>
       </div>
-      <div v-else-if="currentView === 'sources'">
+      <div v-else-if="currentView === 'sources'" class="flex-grow overflow-auto">
         <Sources />
       </div>
-      <div v-else-if="currentView === 'config'">
+      <div v-else-if="currentView === 'config'" class="flex-grow overflow-auto">
         <Config />
       </div>
     </div>

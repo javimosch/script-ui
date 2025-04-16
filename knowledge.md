@@ -5,6 +5,7 @@ Web-based UI for managing and executing scripts across multiple languages (JavaS
 
 ## Key Features
 - Multi-language script execution (Node.js, Deno, Bash)
+- Command-line arguments support for all script types
 - Multiple script sources management
 - Drag-and-drop file upload
 - Environment variable configuration
@@ -26,8 +27,14 @@ Web-based UI for managing and executing scripts across multiple languages (JavaS
 - `PORT`: Server port (default: 3000)
 - `SCRIPTS_DIR`: Custom scripts directory location
 
+## Script Execution
+- Node.js (.js): Direct execution with environment variables and command-line arguments
+- Deno (.ts): Uses --env flag for environment variables, supports command-line arguments
+- Shell (.sh): Executed with bash, supports command-line arguments
+
 ## Security Notes
 - Default source cannot be modified or deleted
 - Script file size limited to 1MB
 - Only .js, .ts, and .sh files are allowed
 - Shell scripts are automatically made executable
+- Command-line arguments are passed directly to scripts

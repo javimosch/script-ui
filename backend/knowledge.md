@@ -20,14 +20,16 @@
 - DELETE `/api/sources/:id`: Delete source
 
 ## Script Execution
-- Node.js (.js): Direct execution with environment variables
-- Deno (.ts): Uses --env flag for environment variables
-- Shell (.sh): Executed with bash, made executable automatically
+- Node.js (.js): Direct execution with environment variables and command-line arguments
+- Deno (.ts): Uses --env flag for environment variables, supports command-line arguments
+- Shell (.sh): Executed with bash, supports command-line arguments
+- Arguments are passed directly to the script after the script path
 
 ## Environment Variables
 - Node.js/Shell: Passed through process.env
 - Deno: Passed as --env KEY=VALUE arguments
 - Global variables are merged with script-specific ones
+- Environment variables for Deno are written to temporary .env file
 
 ## File Management
 - Upload size limit: 1MB
@@ -47,8 +49,9 @@ Server expects:
   "type": "run",
   "script": "script_name",
   "config": {
-    "denoFlags": "string",
-    "env": "object"
+    "args": "string",      // Optional command-line arguments
+    "denoFlags": "string", // Optional Deno-specific flags
+    "env": "object"        // Optional environment variables
   }
 }
 ```
@@ -67,3 +70,4 @@ Server sends:
 - Sanitize script paths to prevent directory traversal
 - Limit file upload size
 - Validate environment variable names
+- Command-line arguments are passed directly to scripts (no sanitization)
