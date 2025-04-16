@@ -9,6 +9,7 @@ import sourcesRouter from './routes/sources.js';
 import configRouter from './routes/config.js';
 import { executeScript } from './services/scriptService.js';
 import { initMongoDB, isMongoDBEnabled } from './services/mongoService.js';
+import { initSources } from './services/sourcesService.js';
 
 // Initialize environment variables
 dotenv.config();
@@ -90,7 +91,7 @@ wss.on('connection', (ws, request) => {
   });
 });
 
-// Initialize MongoDB if enabled
+// Initialize services
 const initializeServices = async () => {
   // Try to initialize MongoDB
   const mongoInitialized = await initMongoDB();
@@ -99,6 +100,10 @@ const initializeServices = async () => {
   } else {
     console.log('[Server] Using file-based persistence');
   }
+
+  // Initialize sources (and migrate if needed)
+  await initSources();
+  console.log('[Server] Sources initialized');
 };
 
 // Start server

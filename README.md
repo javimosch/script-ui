@@ -58,7 +58,9 @@ To use MongoDB for configuration persistence:
 2. Provide a valid MongoDB connection URI in `MONGODB_URI`
 3. Restart the server
 
-When MongoDB is enabled, all configuration data (script configs, environment variables, etc.) will be stored in MongoDB instead of the file system. This provides better scalability and allows for deployment across multiple instances.
+When MongoDB is enabled, all configuration data (script configs, environment variables, sources, etc.) will be stored in MongoDB instead of the file system. This provides better scalability and allows for deployment across multiple instances.
+
+Existing data from `data/sources.json` and `data/config.json` will be automatically migrated to MongoDB on first startup with MongoDB enabled.
 
 ## Usage
 
