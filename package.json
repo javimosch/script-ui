@@ -1,5 +1,5 @@
 {
-  "name": "script-ui",
+  "name": "scripts-ui",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
@@ -8,7 +8,17 @@
   },
   "main": "./cli/index.js",
   "bin": {
-    "scripts-ui": "./cli/index.js"
+    "scripts-ui": "./cli/index.js",
+    "script-ui": "./cli/index.js",
+    "sui": "./cli/index.js"
+  },
+  "author":{
+    "name": "Javier Leandro Arancibia",
+    "email": "arancibiajav@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:javimosch/scripts-ui.git"
   },
   "dependencies": {
     "commander": "^11.1.0",

@@ -1,4 +1,4 @@
-# Script UI
+# Scripts UI
 
 A web-based interface for managing and executing scripts across multiple programming languages.
 
