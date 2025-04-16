@@ -55,7 +55,7 @@ const app = createApp({
             class="mt-4"
           />
         </div>
-        <ScriptOutput :output="output" />
+        <ScriptOutput :output="output" @clear="clearOutput" />
       </div>
       <div v-else-if="currentView === 'sources'">
         <Sources />
@@ -80,6 +80,8 @@ const app = createApp({
 
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
+        // Add timestamp to each message
+        message.timestamp = new Date().toLocaleTimeString();
         output.value.push(message);
       };
 
@@ -99,9 +101,14 @@ const app = createApp({
       ws.onerror = (error) => {
         output.value.push({
           type: 'error',
-          data: `WebSocket error: ${error.message || 'Unknown error'}`
+          data: `WebSocket error: ${error.message || 'Unknown error'}`,
+          timestamp: new Date().toLocaleTimeString()
         });
       };
+    };
+
+    const clearOutput = () => {
+      output.value = [];
     };
 
     return {
@@ -109,7 +116,8 @@ const app = createApp({
       currentView,
       selectedScript,
       selectScript,
-      executeScript
+      executeScript,
+      clearOutput
     };
   }
 });
