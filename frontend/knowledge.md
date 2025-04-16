@@ -40,6 +40,6 @@
 - Responsive grid layout for script management
 
 ## WebSocket Usage
-- Connect to ws://localhost:3000/ws
+- Connect to ws://window.location.origin+'/ws
 - Message format: { type: 'run', script: string, config: { args?: string, env?: object, denoFlags?: string } }
 - Receives: { type: 'output'|'error'|'exit', data: string }

@@ -17,10 +17,11 @@ const rootDir = join(__dirname, '..');
 const program = new Command();
 
 // Set up program information
+const packageJson = JSON.parse(fs.readFileSync(join(rootDir, 'package.json'), 'utf8'));
 program
-  .name('scripts-ui')
-  .description('Command line interface for Scripts UI')
-  .version('1.0.0');
+  .name(packageJson.name)
+  .description(packageJson.description || 'Command line interface for Scripts UI')
+  .version(packageJson.version);
 
 // Function to check if this is the first run and ask for usage collection consent
 async function checkFirstRunAndConsent() {

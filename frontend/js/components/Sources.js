@@ -119,7 +119,7 @@ export default {
 
     const fetchSources = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/sources');
+        const response = await fetch(window.location.origin+'/api/sources');
         sources.value = await response.json();
       } catch (error) {
         console.error('Failed to fetch sources:', error);
@@ -128,7 +128,7 @@ export default {
 
     const addSource = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/sources', {
+        const response = await fetch(window.location.origin+'/api/sources', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -153,7 +153,7 @@ export default {
 
     const updateSource = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/sources/${editingSource.value.id}`, {
+        const response = await fetch(window.location.origin+`/api/sources/${editingSource.value.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -178,7 +178,7 @@ export default {
     const confirmDelete = async (source) => {
       if (confirm(`Are you sure you want to delete "${source.name}"?`)) {
         try {
-          const response = await fetch(`http://localhost:3000/api/sources/${source.id}`, {
+          const response = await fetch(window.location.origin+`/api/sources/${source.id}`, {
             method: 'DELETE'
           });
           

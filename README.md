@@ -75,7 +75,7 @@ Script UI includes a command-line interface for easier server management:
 
 ```bash
 # Quick start with npx (no installation required)
-npx scripts-ui serve
+npx scripts-ui@latest serve
 
 # Start the server with default environment
 npm run cli serve
@@ -94,7 +94,7 @@ Alternatively, you can start the server using npm:
 npm start
 ```
 
-After starting the server, open your browser and navigate to `http://localhost:3000`
+After starting the server, open your browser and navigate to `http://window.location.origin+'`
 
 ### Managing Scripts
 

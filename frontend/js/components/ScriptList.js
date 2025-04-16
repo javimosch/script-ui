@@ -65,7 +65,7 @@ export default {
 
     const fetchScripts = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/scripts');
+        const response = await fetch(window.location.origin+'/api/scripts');
         scripts.value = await response.json();
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
@@ -79,7 +79,7 @@ export default {
       }
 
       try {
-        const response = await fetch('http://localhost:3000/api/scripts/upload', {
+        const response = await fetch(window.location.origin+'/api/scripts/upload', {
           method: 'POST',
           body: formData
         });
@@ -96,7 +96,7 @@ export default {
 
     const deleteScript = async (script) => {
       try {
-        const response = await fetch(`http://localhost:3000/api/scripts/${encodeURIComponent(script)}`, {
+        const response = await fetch(window.location.origin+`/api/scripts/${encodeURIComponent(script)}`, {
           method: 'DELETE'
         });
 

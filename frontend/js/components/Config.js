@@ -162,7 +162,7 @@ export default {
 
     const fetchScripts = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/scripts');
+        const response = await fetch(window.location.origin+'/api/scripts');
         scripts.value = await response.json();
       } catch (error) {
         console.error('Failed to fetch scripts:', error);
@@ -171,7 +171,7 @@ export default {
 
     const fetchSources = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/sources');
+        const response = await fetch(window.location.origin+'/api/sources');
         sources.value = await response.json();
         // Set default source if available
         const defaultSource = sources.value.find(s => s.isDefault);
