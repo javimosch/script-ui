@@ -1,68 +1,112 @@
-import { ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
+import { ref, onMounted, computed } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
 
 export default {
   name: 'ScriptList',
   emits: ['script-selected'],
   template: `
-    <div
-      class="bg-white p-4 rounded-lg shadow"
-      @dragover.prevent
-      @drop.prevent="handleDrop"
-    >
+    <div class="bg-white p-4 rounded-lg shadow">
       <h2 class="text-xl font-semibold mb-4">Available Scripts</h2>
 
-      <!-- Upload UI -->
-      <div
-        class="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 text-center hover:border-gray-400 transition-colors"
-        :class="{ 'border-blue-500 bg-blue-50': isDragging }"
-      >
-        <input
-          type="file"
-          ref="fileInput"
-          @change="handleFileSelect"
-          accept=".js,.sh"
-          class="hidden"
-          multiple
-        >
-        <button
-          @click="$refs.fileInput.click()"
-          class="btn btn-primary mb-2"
-        >
-          Choose Files
-        </button>
-        <p class="text-sm text-gray-600">or drag and drop script files here</p>
-      </div>
+      <!-- Sources and Scripts -->
+      <div v-if="sources.length > 0" class="space-y-6">
+        <div v-for="source in sources" :key="source.id" class="border rounded-lg p-4">
+          <h3 class="font-medium text-lg mb-3">{{ source.name }}</h3>
 
-      <!-- Scripts List -->
-      <div class="space-y-2">
-        <div
-          v-for="script in scripts"
-          :key="script"
-          class="flex items-center gap-2"
-        >
-          <button
-            @click="selectScript(script)"
-            class="flex-grow text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+          <!-- Upload UI for each source -->
+          <div
+            class="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 text-center hover:border-gray-400 transition-colors"
+            :class="{ 'border-blue-500 bg-blue-50': isDragging === source.id }"
+            @dragover.prevent="handleDragOver($event, source.id)"
+            @dragleave.prevent="handleDragLeave"
+            @drop.prevent="handleDrop($event, source.id)"
           >
-            {{ script }}
-          </button>
-          <button
-            @click="confirmDelete(script)"
-            class="px-2 py-2 rounded text-red-600 hover:bg-red-100"
-            title="Delete script"
-          >
-            ×
-          </button>
+            <input
+              type="file"
+              :ref="'fileInput-' + source.id"
+              @change="(event) => handleFileSelect(event, source.id)"
+              accept=".js,.sh,.ts"
+              class="hidden"
+              multiple
+            >
+            <button
+              @click="$refs['fileInput-' + source.id][0].click()"
+              class="btn btn-primary mb-2"
+            >
+              Choose Files
+            </button>
+            <p class="text-sm text-gray-600">or drag and drop script files here</p>
+          </div>
+
+          <!-- Scripts for this source -->
+          <div v-if="scriptsBySource[source.id] && scriptsBySource[source.id].length > 0" class="space-y-2">
+            <div
+              v-for="script in scriptsBySource[source.id]"
+              :key="script.name"
+              class="flex items-center gap-2"
+            >
+              <button
+                @click="selectScript(script)"
+                class="flex-grow text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+              >
+                {{ script.name }}
+              </button>
+              <button
+                @click="confirmDelete(script)"
+                class="px-2 py-2 rounded text-red-600 hover:bg-red-100"
+                title="Delete script"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+          <div v-else class="text-gray-500 text-sm italic">
+            No scripts in this source
+          </div>
         </div>
+      </div>
+      <div v-else class="text-gray-500 text-center py-4">
+        No sources configured. Please add sources in the Sources tab.
       </div>
     </div>
   `,
   setup(props, { emit }) {
     const scripts = ref([]);
-    const isDragging = ref(false);
-    const fileInput = ref(null);
-    const selectedScript = ref(null);
+    const sources = ref([]);
+    const isDragging = ref(null); // Will hold the source ID that's being dragged over
 
+    // Computed property to group scripts by source
+    const scriptsBySource = computed(() => {
+      const grouped = {};
+
+      // Initialize with empty arrays for all sources
+      sources.value.forEach(source => {
+        grouped[source.id] = [];
+      });
+
+      // Group scripts by source ID
+      scripts.value.forEach(script => {
+        if (script.source && script.source.id) {
+          if (!grouped[script.source.id]) {
+            grouped[script.source.id] = [];
+          }
+          grouped[script.source.id].push(script);
+        }
+      });
+
+      return grouped;
+    });
+
+    // Fetch sources
+    const fetchSources = async () => {
+      try {
+        const response = await fetch(window.location.origin+'/api/sources');
+        sources.value = await response.json();
+      } catch (error) {
+        console.error('Failed to fetch sources:', error);
+      }
+    };
+
+    // Fetch scripts
     const fetchScripts = async () => {
       try {
         const response = await fetch(window.location.origin+'/api/scripts');
@@ -72,14 +116,15 @@ export default {
       }
     };
 
-    const uploadFiles = async (files) => {
+    // Upload files to a specific source
+    const uploadFiles = async (files, sourceId) => {
       const formData = new FormData();
       for (const file of files) {
         formData.append('scripts', file);
       }
 
       try {
-        const response = await fetch(window.location.origin+'/api/scripts/upload', {
+        const response = await fetch(window.location.origin+`/api/scripts/upload?sourceId=${sourceId}`, {
           method: 'POST',
           body: formData
         });
@@ -94,11 +139,13 @@ export default {
       }
     };
 
+    // Delete a script
     const deleteScript = async (script) => {
       try {
-        const response = await fetch(window.location.origin+`/api/scripts/${encodeURIComponent(script)}`, {
-          method: 'DELETE'
-        });
+        const response = await fetch(
+          window.location.origin+`/api/scripts/${encodeURIComponent(script.name)}?sourceId=${script.source.id}`,
+          { method: 'DELETE' }
+        );
 
         if (response.ok) {
           await fetchScripts(); // Refresh the list
@@ -110,52 +157,62 @@ export default {
       }
     };
 
+    // Confirm script deletion
     const confirmDelete = (script) => {
-      if (confirm(`Are you sure you want to delete "${script}"?`)) {
+      if (confirm(`Are you sure you want to delete "${script.name}" from source "${script.source.name}"?`)) {
         deleteScript(script);
       }
     };
 
-    const handleFileSelect = (event) => {
+    // Handle file selection for a specific source
+    const handleFileSelect = (event, sourceId) => {
       const files = event.target.files;
       if (files.length > 0) {
-        uploadFiles(files);
+        uploadFiles(files, sourceId);
       }
     };
 
-    const handleDrop = (event) => {
-      isDragging.value = false;
+    // Handle drag over for a specific source
+    const handleDragOver = (event, sourceId) => {
+      event.preventDefault();
+      isDragging.value = sourceId;
+    };
+
+    // Handle drag leave
+    const handleDragLeave = (event) => {
+      event.preventDefault();
+      isDragging.value = null;
+    };
+
+    // Handle drop for a specific source
+    const handleDrop = (event, sourceId) => {
+      event.preventDefault();
+      isDragging.value = null;
       const files = event.dataTransfer.files;
       if (files.length > 0) {
-        uploadFiles(files);
+        uploadFiles(files, sourceId);
       }
     };
 
-    // Drag events
-    const handleDragEvents = (event) => {
-      event.preventDefault();
-      isDragging.value = event.type === 'dragenter' || event.type === 'dragover';
-    };
-
-    onMounted(() => {
-      fetchScripts();
-
-      // Setup drag event listeners
-      const el = document.querySelector('.bg-white');
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        el.addEventListener(eventName, handleDragEvents);
-      });
-    });
-
+    // Select a script
     const selectScript = (script) => {
-      emit('script-selected', script);
+      emit('script-selected', script.name);
     };
+
+    // Initialize
+    onMounted(async () => {
+      await fetchSources();
+      await fetchScripts();
+    });
 
     return {
       scripts,
+      sources,
+      scriptsBySource,
       isDragging,
-      fileInput,
       handleFileSelect,
+      handleDragOver,
+      handleDragLeave,
       handleDrop,
       confirmDelete,
       selectScript

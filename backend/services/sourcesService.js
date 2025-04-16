@@ -5,14 +5,14 @@ import { existsSync } from 'fs';
 import { isMongoDBEnabled, getDB } from './mongoService.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
-const DATA_DIR = join(__dirname, '../../data');
+const DATA_DIR = join(process.cwd(), './scripts-ui/data');
+const SCRIPTS_DIR = process.env.SCRIPTS_DIR || join(process.cwd(), '.scripts-ui/scripts');
 const SOURCES_FILE = join(DATA_DIR, 'sources.json');
 const DEFAULT_SOURCE = {
   id: 'default',
   name: 'Project Scripts',
-  path: join(__dirname, '../../scripts'),
+  path: SCRIPTS_DIR,
   isDefault: true
 };
 
@@ -24,8 +24,23 @@ async function initSourcesFile() {
       await mkdir(DATA_DIR, { recursive: true });
     }
 
+    if (!existsSync(SCRIPTS_DIR)) {
+      console.log(`[Sources] Created scripts directory: ${SCRIPTS_DIR}`);
+      await mkdir(SCRIPTS_DIR, { recursive: true });
+    }
+
     try {
-      await readFile(SOURCES_FILE, 'utf8');
+      let sources = JSON.parse(await readFile(SOURCES_FILE, 'utf8'))
+
+      
+      let defaultItem = sources.find(sourceItem => sourceItem.id==='default')
+      if(defaultItem.path!=DEFAULT_SOURCE.path){
+        await writeFile(SOURCES_FILE, JSON.stringify([
+          ...[DEFAULT_SOURCE],
+          ...sources.filter(sourceItem=>sourceItem.id!=='default'),
+        ]), 'utf8');
+      }
+
     } catch (error) {
       if (error.code === 'ENOENT') {
         await writeFile(SOURCES_FILE, JSON.stringify([DEFAULT_SOURCE]), 'utf8');

@@ -12,7 +12,7 @@
     "script-ui": "./cli/index.js",
     "sui": "./cli/index.js"
   },
-  "author":{
+  "author": {
     "name": "Javier Leandro Arancibia",
     "email": "arancibiajav@gmail.com"
   },

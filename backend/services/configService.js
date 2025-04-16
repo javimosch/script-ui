@@ -7,7 +7,7 @@ import { isMongoDBEnabled, getDB } from './mongoService.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const DATA_DIR = join(__dirname, '../../data');
+const DATA_DIR = join(process.cwd(), '.scripts-ui/data');
 const CONFIG_FILE = join(DATA_DIR, 'config.json');
 
 const defaultConfig = {

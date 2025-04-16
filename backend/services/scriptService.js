@@ -26,23 +26,40 @@ async function cleanupTempFile(filePath) {
 export const listScripts = async () => {
   try {
     const sources = await listSources();
-    const allScripts = [];
+    const scriptsWithSources = [];
 
     for (const source of sources) {
       try {
         const files = await readdir(source.path);
         const scripts = files.filter(file => ALLOWED_EXTENSIONS.includes(extname(file)));
-        allScripts.push(...scripts);
+
+        // Add each script with its source information
+        scripts.forEach(script => {
+          scriptsWithSources.push({
+            name: script,
+            source: {
+              id: source.id,
+              name: source.name
+            }
+          });
+        });
       } catch (error) {
         console.error(`Error reading source ${source.name}:`, error);
       }
     }
 
-    return [...new Set(allScripts)]; // Remove duplicates
+    // Return the scripts with their source information
+    return scriptsWithSources;
   } catch (error) {
     console.error('Error listing scripts:', error);
     throw error;
   }
+};
+
+// For backward compatibility, get just the script names
+export const listScriptNames = async () => {
+  const scripts = await listScripts();
+  return [...new Set(scripts.map(script => script.name))]; // Remove duplicates
 };
 
 export const executeScript = async (scriptName, ws, config = {}) => {
