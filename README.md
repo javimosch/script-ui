@@ -94,7 +94,7 @@ Alternatively, you can start the server using npm:
 npm start
 ```
 
-After starting the server, open your browser and navigate to `http://window.location.origin+'`
+After starting the server, open your browser and navigate to `http://localhost:3000+'`
 
 ### Managing Scripts
 

@@ -80,7 +80,8 @@ const app = createApp({
 
     const executeScript = ({ script, args, config }) => {
       output.value = [];
-      const ws = new WebSocket(`ws://${window.location.hostname+window.location.port?':3000':''}/ws`);
+      let host = location.origin.replace('http://', 'ws://');
+      const ws = new WebSocket(`${host}/ws`);
 
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);

@@ -1,4 +1,4 @@
-const API_URL = 'http://window.location.origin+'/api';
+const API_URL = window.location.origin+'/api';
 
 const defaultScriptConfig = {
   scriptName: '', // Script filename
