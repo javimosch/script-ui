@@ -5,6 +5,7 @@ import { dirname, join } from 'path';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import scriptsRouter from './routes/scripts.js';
+import sourcesRouter from './routes/sources.js';
 import { executeScript } from './services/scriptService.js';
 
 // Initialize environment variables
@@ -24,6 +25,7 @@ app.use(express.static(join(__dirname, '../frontend')));
 
 // Routes
 app.use('/api/scripts', scriptsRouter);
+app.use('/api/sources', sourcesRouter);
 
 // Create WebSocket server
 const wss = new WebSocketServer({ noServer: true });
