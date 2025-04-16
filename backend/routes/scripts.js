@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { chmod } from 'fs/promises';
+import { chmod, unlink } from 'fs/promises';
 import { listScripts } from '../services/scriptService.js';
 import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
@@ -71,6 +71,32 @@ router.post('/upload', upload.array('scripts'), (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to upload files' });
+  }
+});
+
+// Delete script
+router.delete('/:script', async (req, res) => {
+  try {
+    const scriptName = req.params.script;
+    const scriptPath = join(SCRIPTS_DIR, scriptName);
+    
+    // Validate file extension
+    const ext = extname(scriptName).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return res.status(400).json({ error: 'Invalid file type' });
+    }
+
+    // Check if file exists in scripts directory
+    const scripts = await listScripts();
+    if (!scripts.includes(scriptName)) {
+      return res.status(404).json({ error: 'Script not found' });
+    }
+
+    // Delete the file
+    await unlink(scriptPath);
+    res.json({ message: 'Script deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete script' });
   }
 });
 

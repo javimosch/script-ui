@@ -34,14 +34,25 @@ export default {
 
       <!-- Scripts List -->
       <div class="space-y-2">
-        <button
+        <div
           v-for="script in scripts"
           :key="script"
-          @click="$emit('script-selected', script)"
-          class="w-full text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+          class="flex items-center gap-2"
         >
-          {{ script }}
-        </button>
+          <button
+            @click="$emit('script-selected', script)"
+            class="flex-grow text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
+          >
+            {{ script }}
+          </button>
+          <button
+            @click="confirmDelete(script)"
+            class="px-2 py-2 rounded text-red-600 hover:bg-red-100"
+            title="Delete script"
+          >
+            ×
+          </button>
+        </div>
       </div>
     </div>
   `,
@@ -81,6 +92,28 @@ export default {
       }
     };
 
+    const deleteScript = async (script) => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/scripts/${encodeURIComponent(script)}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          await fetchScripts(); // Refresh the list
+        } else {
+          console.error('Delete failed:', await response.text());
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+      }
+    };
+
+    const confirmDelete = (script) => {
+      if (confirm(`Are you sure you want to delete "${script}"?`)) {
+        deleteScript(script);
+      }
+    };
+
     const handleFileSelect = (event) => {
       const files = event.target.files;
       if (files.length > 0) {
@@ -117,7 +150,8 @@ export default {
       isDragging,
       fileInput,
       handleFileSelect,
-      handleDrop
+      handleDrop,
+      confirmDelete
     };
   }
 };
