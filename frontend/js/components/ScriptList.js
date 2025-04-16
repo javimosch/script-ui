@@ -2,16 +2,17 @@ import { ref, onMounted } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 
 export default {
   name: 'ScriptList',
+  emits: ['script-selected'],
   template: `
-    <div 
+    <div
       class="bg-white p-4 rounded-lg shadow"
       @dragover.prevent
       @drop.prevent="handleDrop"
     >
       <h2 class="text-xl font-semibold mb-4">Available Scripts</h2>
-      
+
       <!-- Upload UI -->
-      <div 
+      <div
         class="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-4 text-center hover:border-gray-400 transition-colors"
         :class="{ 'border-blue-500 bg-blue-50': isDragging }"
       >
@@ -23,7 +24,7 @@ export default {
           class="hidden"
           multiple
         >
-        <button 
+        <button
           @click="$refs.fileInput.click()"
           class="btn btn-primary mb-2"
         >
@@ -40,7 +41,7 @@ export default {
           class="flex items-center gap-2"
         >
           <button
-            @click="$emit('script-selected', script)"
+            @click="selectScript(script)"
             class="flex-grow text-left px-4 py-2 rounded bg-gray-100 hover:bg-gray-200"
           >
             {{ script }}
@@ -56,10 +57,11 @@ export default {
       </div>
     </div>
   `,
-  setup() {
+  setup(props, { emit }) {
     const scripts = ref([]);
     const isDragging = ref(false);
     const fileInput = ref(null);
+    const selectedScript = ref(null);
 
     const fetchScripts = async () => {
       try {
@@ -81,7 +83,7 @@ export default {
           method: 'POST',
           body: formData
         });
-        
+
         if (response.ok) {
           await fetchScripts(); // Refresh the list
         } else {
@@ -97,7 +99,7 @@ export default {
         const response = await fetch(`http://localhost:3000/api/scripts/${encodeURIComponent(script)}`, {
           method: 'DELETE'
         });
-        
+
         if (response.ok) {
           await fetchScripts(); // Refresh the list
         } else {
@@ -137,7 +139,7 @@ export default {
 
     onMounted(() => {
       fetchScripts();
-      
+
       // Setup drag event listeners
       const el = document.querySelector('.bg-white');
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -145,13 +147,18 @@ export default {
       });
     });
 
+    const selectScript = (script) => {
+      emit('script-selected', script);
+    };
+
     return {
       scripts,
       isDragging,
       fileInput,
       handleFileSelect,
       handleDrop,
-      confirmDelete
+      confirmDelete,
+      selectScript
     };
   }
 };

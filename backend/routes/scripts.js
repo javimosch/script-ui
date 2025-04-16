@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const SCRIPTS_DIR = process.env.SCRIPTS_DIR || join(__dirname, '../../scripts');
-const ALLOWED_EXTENSIONS = ['.sh', '.js'];
+const ALLOWED_EXTENSIONS = ['.sh', '.js', '.ts'];
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -27,7 +27,7 @@ const fileFilter = (req, file, cb) => {
   if (ALLOWED_EXTENSIONS.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only .js and .sh files are allowed.'));
+    cb(new Error('Invalid file type. Only .js, .ts, and .sh files are allowed.'));
   }
 };
 
